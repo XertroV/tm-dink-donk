@@ -52,13 +52,8 @@ void CheckShouldNotify() {
 
     auto @prior = mostRecentSeq.prior;
 
-    // todo: custom ui sequence check
-    bool isUIInteraction = mostRecentSeq.seq == CGamePlaygroundUIConfig::EUISequence::UIInteraction;
-    bool isEndRound = mostRecentSeq.seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
-    // bool isPodum = mostRecentSeq.seq == CGamePlaygroundUIConfig::EUISequence::Podium;
-    if (isUIInteraction || isEndRound) {
+    if (CurrentlyMeetsFocusNotificationConditions())
         startnew(MonitorFocusLoop);
-    }
 }
 
 bool ShouldDrawAnimations = false;
@@ -68,18 +63,15 @@ void MonitorFocusLoop() {
     while (FocusLoopActive) yield();
     FocusLoopActive = true;
     auto seq = mostRecentSeq.seq;
-    // todo: custom ui sequences
-    bool isUIInteraction = mostRecentSeq.seq == CGamePlaygroundUIConfig::EUISequence::UIInteraction;
-    bool isEndRound = mostRecentSeq.seq == CGamePlaygroundUIConfig::EUISequence::EndRound;
-    if (!isUIInteraction && !isEndRound) {
-        NotifyWarning("Monitor focus loop got an unexpected ui sequence: " + tostring(seq));
-        FocusLoopActive = false;
-        return;
-    }
+    // if (!mostRecentSeq.MatchesUiSequenceSettings()) {
+    //     NotifyWarning("Monitor focus loop got an unexpected ui sequence: " + tostring(seq));
+    //     FocusLoopActive = false;
+    //     return;
+    // }
 
     while (seq == mostRecentSeq.seq) {
         ShouldDrawAnimations = !IsGameFocused || IsKeyboardFocus;
-        ShouldDrawAnimations = ShouldDrawAnimations;
+        ShouldDrawAnimations = ShouldDrawAnimations && mostRecentSeq.MatchesUiSequenceSettings();
         if (CurrentlyMeetsFocusNotificationConditions()) {
             // sound should play
             EnsureNotifSoundPlaying();
@@ -95,15 +87,17 @@ void MonitorFocusLoop() {
 }
 
 
+// true if it's okay to proceed
 bool CurrentlyMeetsSkipSettings() {
     if (S_SkipNotificationWhenClanScoresGTE5 && mostRecentSeq.MaxClanScore >= 5) return false;
-    if (S_SkipNotificationWhenPodiumMoreRecentThanPlaying && IsPodiumMoreRecentThanPlaying()) return false;
+    if (S_SkipNotificationWhenPodiumMoreRecentThanPlaying && (IsPodiumMoreRecentThanPlaying() || IsNoneMoreRecentThanPlaying())) return false;
     return true;
 }
 
 
 bool CurrentlyMeetsFocusNotificationConditions() {
     if (!CurrentlyMeetsSkipSettings()) return false;
+    if (!mostRecentSeq.MatchesUiSequenceSettings()) return false;
 
     bool isEither = S_RoundStartNotifConditions == FocusConditions::GameUnfocusedOrKeyboardHasFocus;
 
@@ -113,7 +107,11 @@ bool CurrentlyMeetsFocusNotificationConditions() {
 }
 
 bool IsPodiumMoreRecentThanPlaying() {
-    return sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Podium] > sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
+    return sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Podium] >= sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
+}
+
+bool IsNoneMoreRecentThanPlaying() {
+    return sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::None] >= sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
 }
 
 Audio::Voice@ activeVoice = null;
@@ -214,6 +212,7 @@ void _DrawDinkDonkImage(UI::DrawList@ dl) {
 }
 
 void RenderDinkDonk() {
+    if (!CurrentlyMeetsSkipSettings()) return;
     UpdateRenderVars();
     if (S_DrawDinkDonkImage)
         _DrawDinkDonkImage(UI::GetForegroundDrawList());
@@ -225,19 +224,6 @@ void RenderDinkDonk() {
             DrawDDText(Icons::Heartbeat + " / " + Icons::KeyboardO + " FOCUSED");
         }
     }
-
-    // nvg::Reset();
-    // nvg::BeginPath();
-
-    // nvg::Rect(vec2(), screen);
-    // nvg::FillPaint(nvg::TexturePattern(mainTL, mainSize, 0., DDMainTex, 1.0));
-    // nvg::Fill();
-
-    // nvg::Rect(vec2(), screen);
-    // nvg::FillPaint(nvg::TexturePattern(armTL, armSize, angle, DDArmTex, 1.0));
-    // nvg::Fill();
-
-    // nvg::ClosePath();
 }
 
 int g_NvgFont = nvg::LoadFont("DroidSans.ttf", true);

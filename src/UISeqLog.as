@@ -28,6 +28,24 @@ class UISeqLog {
         InGame = !IsNone;
     }
 
+    bool MatchesUiSequenceSettings() {
+        switch (seq) {
+            case CGamePlaygroundUIConfig::EUISequence::None: return S_Enable_UISeq_None;
+            case CGamePlaygroundUIConfig::EUISequence::Playing: return S_Enable_UISeq_Playing;
+            case CGamePlaygroundUIConfig::EUISequence::Intro: return S_Enable_UISeq_Intro;
+            case CGamePlaygroundUIConfig::EUISequence::Outro: return S_Enable_UISeq_Outro;
+            case CGamePlaygroundUIConfig::EUISequence::Podium: return S_Enable_UISeq_Podium;
+            case CGamePlaygroundUIConfig::EUISequence::CustomMTClip: return S_Enable_UISeq_CustomMTClip;
+            case CGamePlaygroundUIConfig::EUISequence::EndRound: return S_Enable_UISeq_EndRound;
+            case CGamePlaygroundUIConfig::EUISequence::PlayersPresentation: return S_Enable_UISeq_PlayersPresentation;
+            case CGamePlaygroundUIConfig::EUISequence::UIInteraction: return S_Enable_UISeq_UIInteraction;
+            case CGamePlaygroundUIConfig::EUISequence::RollingBackgroundIntro: return S_Enable_UISeq_RollingBackgroundIntro;
+            case CGamePlaygroundUIConfig::EUISequence::CustomMTClip_WithUIInteraction: return S_Enable_UISeq_CustomMTClip_WithUIInteraction;
+            case CGamePlaygroundUIConfig::EUISequence::Finish: return S_Enable_UISeq_Finish;
+        }
+        return false;
+    }
+
     string timeStr;
     string indexStr;
     string _asString;
