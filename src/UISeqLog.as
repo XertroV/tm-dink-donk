@@ -29,6 +29,9 @@ class UISeqLog {
     }
 
     bool MatchesUiSequenceSettings() {
+        // if (S_NotifyDuring321Countdown && CGamePlaygroundUIConfig::EUISequence::Playing) {
+        //     return PlayerCurrentRaceTimeNegative();
+        // }
         switch (seq) {
             case CGamePlaygroundUIConfig::EUISequence::None: return S_Enable_UISeq_None;
             case CGamePlaygroundUIConfig::EUISequence::Playing: return S_Enable_UISeq_Playing;

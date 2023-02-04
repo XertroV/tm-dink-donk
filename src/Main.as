@@ -65,7 +65,8 @@ void RenderMenu() {
 */
 void RenderInterface() {
     if (!ShowWindow) return;
-    if (UI::Begin(DynamicMenuTitle() + '###dinkdonk-main', ShowWindow)) {
+    // DynamicMenuTitle()
+    if (UI::Begin(MenuTitle + '###dinkdonk-main', ShowWindow)) {
         UI::Columns(2, "", false);
         DrawDebugInfoGlobalState();
         UI::NextColumn();
@@ -110,6 +111,20 @@ void NotifyWarning(const string &in msg) {
     UI::ShowNotification(Meta::ExecutingPlugin().Name + ": Warning", msg, vec4(.9, .6, .2, .3), 15000);
 }
 
+/** Called when a setting in the settings panel was changed.
+*/
+void OnSettingsChanged() {
+    // will trigger a new UI sequence registration, restarting the loop
+    startnew(ReloadInAFewFrames);
+}
+
+void ReloadInAFewFrames() {
+    yield();
+    yield();
+    yield();
+    lastEnabled = !S_Enabled;
+    trace('Settings changed');
+}
 
 void AddSimpleTooltip(const string &in msg) {
     if (UI::IsItemHovered()) {

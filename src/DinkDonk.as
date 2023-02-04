@@ -9,13 +9,14 @@ UISeqLog@ mostRecentSeq;
 // sequence as ix -> timestamp. used to compare which UI sequence happened most recently (e.g., Alert on UI interaction if Playing happened more recently than Podium)
 uint[] sequenceLastActive = array<uint>(12);
 bool lastEnabled = false;
+bool lastMetUISeqSettings = false;
 
 void CheckUISeq() {
     auto cmap = GetApp().Network.ClientManiaAppPlayground;
     auto pgish = cast<CSmArenaInterfaceManialinkScripHandler>(GetApp().Network.PlaygroundInterfaceScriptHandler);
     CGamePlaygroundUIConfig::EUISequence seq = CGamePlaygroundUIConfig::EUISequence::None;
     if (cmap !is null && cmap.UI !is null) seq = cmap.UI.UISequence;
-    if (lastEnabled != S_Enabled || UISequenceEvents.Length == 0 || UISequenceEvents[UISequenceEvents.Length - 1].seq != seq) {
+    if (lastEnabled != S_Enabled || UISequenceEvents.Length == 0 || mostRecentSeq.seq != seq || lastMetUISeqSettings != mostRecentSeq.MatchesUiSequenceSettings()) {
         lastEnabled = S_Enabled;
         if (mostRecentSeq !is null)
             mostRecentSeq.Duration = Time::Now - mostRecentSeq.ts;
@@ -23,12 +24,10 @@ void CheckUISeq() {
         mostRecentSeq.MaxClanScore = pgish.ClanScores.Length < 3 ? 0 : Math::Max(pgish.ClanScores[1], pgish.ClanScores[0]);
         UISequenceEvents.InsertLast(mostRecentSeq);
         sequenceLastActive[seq] = Time::Now;
+        lastMetUISeqSettings = mostRecentSeq.MatchesUiSequenceSettings();
         CheckShouldNotify();
     }
 }
-
-// todo: S_SkipNotificationWhenPodiumMoreRecentThanPlaying
-// todo: S_SkipNotificationWhenClanScoresGTE5
 
 
 /**
@@ -52,8 +51,7 @@ void CheckShouldNotify() {
 
     auto @prior = mostRecentSeq.prior;
 
-    if (CurrentlyMeetsFocusNotificationConditions())
-        startnew(MonitorFocusLoop);
+    startnew(MonitorFocusLoop);
 }
 
 bool ShouldDrawAnimations = false;
@@ -79,6 +77,7 @@ void MonitorFocusLoop() {
             // sound should not play
             EnsureNotifSoundNotPlaying();
         }
+        if (!mostRecentSeq.MatchesUiSequenceSettings()) break;
         yield();
     }
     ShouldDrawAnimations = false;
@@ -90,7 +89,7 @@ void MonitorFocusLoop() {
 // true if it's okay to proceed
 bool CurrentlyMeetsSkipSettings() {
     if (S_SkipNotificationWhenClanScoresGTE5 && mostRecentSeq.MaxClanScore >= 5) return false;
-    if (S_SkipNotificationWhenPodiumMoreRecentThanPlaying && (IsPodiumMoreRecentThanPlaying() || IsNoneMoreRecentThanPlaying())) return false;
+    if (S_SkipNotificationBetweenMaps && (IsPodiumMoreRecentThanPlaying() || IsLoadingScreen())) return false;
     return true;
 }
 
@@ -103,15 +102,23 @@ bool CurrentlyMeetsFocusNotificationConditions() {
 
     return (!IsGameFocused && (S_RoundStartNotifConditions == FocusConditions::GameUnfocused || isEither))
         || (IsKeyboardFocus && (S_RoundStartNotifConditions == FocusConditions::KeyboardHasFocus || isEither))
+        || (S_RoundStartNotifConditions == FocusConditions::Always)
         ;
 }
 
 bool IsPodiumMoreRecentThanPlaying() {
-    return sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Podium] >= sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
+    auto last = sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Podium];
+    return last > 0 && last > sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
 }
 
 bool IsNoneMoreRecentThanPlaying() {
-    return sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::None] >= sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
+    auto last = sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::None];
+    return last > 0 && last > sequenceLastActive[CGamePlaygroundUIConfig::EUISequence::Playing];
+}
+
+bool IsLoadingScreen() {
+    auto lp = GetApp().LoadProgress;
+    return lp !is null && lp.State == NGameLoadProgress_SMgr::EState::Displayed;
 }
 
 Audio::Voice@ activeVoice = null;

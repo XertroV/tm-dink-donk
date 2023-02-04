@@ -17,7 +17,8 @@ enum FocusConditions {
     Never,
     GameUnfocused,
     KeyboardHasFocus,
-    GameUnfocusedOrKeyboardHasFocus
+    GameUnfocusedOrKeyboardHasFocus,
+    Always
 }
 
 [Setting hidden]
@@ -64,6 +65,10 @@ void Render_S_DinkDonk_Main() {
 
     UI::AlignTextToFramePadding();
     UI::Text("Debug Info:");
+    UI::SameLine();
+    if (UI::Button("Trigger Reload")) {
+        OnSettingsChanged();
+    }
     DrawDebugInfoGlobalState();
 }
 
@@ -144,18 +149,23 @@ void Render_S_Advanced() {
     UI::Separator();
 
     S_SkipNotificationWhenClanScoresGTE5 = UI::Checkbox("Skip Notification when a Team has >= 5 points (Matchmaking)", S_SkipNotificationWhenClanScoresGTE5);
-    S_SkipNotificationWhenPodiumMoreRecentThanPlaying = UI::Checkbox("Skip Notification when changing maps (good for TimeAttack)", S_SkipNotificationWhenPodiumMoreRecentThanPlaying);
+    S_SkipNotificationBetweenMaps = UI::Checkbox("Skip Notification when changing maps (good for TimeAttack)", S_SkipNotificationBetweenMaps);
+    // S_NotifyDuring321Countdown = UI::Checkbox("Allow Notifications during the 321 countdown at start of round.", S_NotifyDuring321Countdown);
 
     UI::Separator();
 
-    ShowWindow = UI::Checkbox("Show Debug Info", ShowWindow);
+    ShowWindow = UI::Checkbox("Show Standalone Debug Window", ShowWindow);
 }
 
 [Setting hidden]
 bool S_SkipNotificationWhenClanScoresGTE5 = true;
 
 [Setting hidden]
-bool S_SkipNotificationWhenPodiumMoreRecentThanPlaying = true;
+bool S_SkipNotificationBetweenMaps = true;
+
+// not yet functional
+[Setting hidden]
+bool S_NotifyDuring321Countdown = true;
 
 
 [SettingsTab name="UI Sequence Log" icon="ListOl" order="99"]
@@ -173,6 +183,7 @@ FocusConditions DrawNotifConditionsCombo(FocusConditions curr) {
         if (UI::Selectable("Game Unfocused", curr == FocusConditions::GameUnfocused)) ret = FocusConditions::GameUnfocused;
         if (UI::Selectable("Keyboard (chat) has Focus", curr == FocusConditions::KeyboardHasFocus)) ret = FocusConditions::KeyboardHasFocus;
         if (UI::Selectable("Game Unfocused or Keyboard has Focus", curr == FocusConditions::GameUnfocusedOrKeyboardHasFocus)) ret = FocusConditions::GameUnfocusedOrKeyboardHasFocus;
+        if (UI::Selectable("Always", curr == FocusConditions::Always)) ret = FocusConditions::Always;
         UI::EndCombo();
     }
 
@@ -183,7 +194,8 @@ string[] focusConditionStrings = {
     "Never",
     "Game Unfocused",
     "Keyboard (chat) has Focus",
-    "Game Unfocused or Keyboard has Focus"
+    "Game Unfocused or Keyboard has Focus",
+    "Always"
 };
 
 const string FocusCondToStr(FocusConditions fc) {
