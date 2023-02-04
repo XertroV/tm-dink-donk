@@ -183,22 +183,23 @@ void UpdateRenderVarsForMenu(vec4 rect) {
     // auto fp = UI::GetStyleVarVec2(UI::StyleVar::FramePadding);
 
     auto sq = vec2(rect.w, rect.w);
-    mainSize = sq * .8;
-    mainTL = vec2(rect.x, rect.y) + sq * vec2(.2, .08);
+    mainSize = sq * .76;
+    mainTL = vec2(rect.x, rect.y) + sq * vec2(.25, .10);
     mainPivot = mainTL + mainSize * vec2(73.7, 73.7) / mainNative;
 
     ddScale = mainSize / mainNative;
 
-    UpdateRenderArmVars();
+    UpdateRenderArmVars(true);
 }
 
-void UpdateRenderArmVars() {
+void UpdateRenderArmVars(bool isMenuIcon = false) {
     armPivot = vec2(5.5, 51.8) * ddScale;
     frameNumber = float(Time::Now) / float(dynamicPeriodMs);
     frameOddEven = Math::Abs((frameNumber / 2. - Math::Floor(frameNumber / 2.)) * 2. - 1.);
     frameOddEvenSlower = Math::Abs((frameNumber / 12. - Math::Floor(frameNumber / 12.)) * 2. - 1.);
     // frameOddEven = Math::Abs(float(frameNumber % 3) - 1);
     angle = frameOddEven * Math::ToRad(-24.0) + Math::ToRad(1);
+    if (isMenuIcon && S_DisableMenuIconAnimation) angle = 0.;
 
     armRot = mat3::Translate(mainPivot - armPivot) * mat3::Translate(armPivot) * mat3::Rotate(angle) * mat3::Translate(armPivot * -1);
     armTL = (armRot * vec2(0, 0)).xy;

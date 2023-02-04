@@ -24,6 +24,8 @@ enum FocusConditions {
 [Setting hidden]
 FocusConditions S_RoundStartNotifConditions = FocusConditions::GameUnfocused;
 
+[Setting hidden]
+bool S_DisableMenuIconAnimation = false;
 
 
 [SettingsTab name="Dink Donk" icon="Bell" order="1"]
@@ -48,6 +50,7 @@ void Render_S_DinkDonk_Main() {
 
     S_DrawDinkDonkImage = UI::Checkbox("Draw Dink Donk Main Image", S_DrawDinkDonkImage);
     S_DrawFocusedWarningText = UI::Checkbox("Draw Focus Warning Text", S_DrawFocusedWarningText);
+    S_DisableMenuIconAnimation = UI::Checkbox("Disable Menu Icon Animation", S_DisableMenuIconAnimation);
 
     UI::AlignTextToFramePadding();
     UI::Text("Demo:");

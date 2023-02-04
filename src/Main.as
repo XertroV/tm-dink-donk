@@ -32,7 +32,7 @@ void MainCoro() {
 }
 
 void FindKeyboardDevice(CInputPort@ input) {
-    for (KeyboardInputIx = 0; KeyboardInputIx < input.ConnectedDevices.Length; KeyboardInputIx++) {
+    for (KeyboardInputIx = 0; KeyboardInputIx < int(input.ConnectedDevices.Length); KeyboardInputIx++) {
         if (cast<CInputDeviceDx8Keyboard>(input.ConnectedDevices[KeyboardInputIx]) !is null) {
             // Notify("kb found at " + KeyboardInputIx);
             return;
