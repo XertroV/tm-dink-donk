@@ -118,7 +118,7 @@ bool IsNoneMoreRecentThanPlaying() {
 
 bool IsLoadingScreen() {
     auto lp = GetApp().LoadProgress;
-    return lp !is null && lp.State == NGameLoadProgress_SMgr::EState::Displayed;
+    return lp !is null && lp.State == NGameLoadProgress::EState::Displayed;
 }
 
 Audio::Voice@ activeVoice = null;

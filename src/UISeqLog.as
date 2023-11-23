@@ -22,7 +22,7 @@ class UISeqLog {
             @prior = UISequenceEvents[UISequenceEvents.Length - 1];
         }
         IsNone = seq == CGamePlaygroundUIConfig::EUISequence::None || mode.Length == 0;
-        IsLocal = !IsNone && mode.Contains("_Local") && !mode.Contains("_Online");
+        IsLocal = !IsNone && (mode.Contains("_Local") || mode.Contains("_Debug")) && !mode.Contains("_Online");
         IsMM = !IsNone && !IsLocal && mode.Contains("Teams_Matchmaking_Online");
         IsKO = !IsNone && !IsLocal && !IsMM && mode.Contains("Knockout");
         InGame = !IsNone;
